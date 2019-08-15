@@ -1,0 +1,103 @@
+html{ 
+	font-size: 100%;
+	font-family:'Open-Sans',sans-serif;
+	color: white; 
+	background-color: black;
+}
+a:link{ 
+	color: #CCCCCC;
+	text-decoration: none;
+}
+a:visited{
+	color: #CCCCCC;
+	text-decoration: none;
+}
+a:hover{
+	color: yellow;
+}
+a:active{
+	color: grey;
+}
+input[type=text], select{
+	padding: 4px 8px;
+	height: 22px;
+	display: inline-block;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+button {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px 14px;
+	margin: 8px 0;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+button:hover {
+	background-color: #45a049;
+}
+.bigText{
+	text-align: center;
+	font-size: 120%;
+}
+.gameInfo{
+	text-align: left;
+	font-size: 70%;
+	color: #999999;
+}
+.menu{
+	margin: 25px;
+}
+.wrapper{
+	text-align: center;
+	width: 730px;
+	margin: auto;
+}
+.board{
+	float: left;
+}
+.gameInfoWrapper{
+	float: left;
+	margin-top: 100px;
+	margin-left: 50px;
+}
+#instructions{
+	display: inline-block;
+	text-align: left;
+	font-size: 80%;
+}
+#gameAddressQR{
+	background-color: black;
+	padding: 5px;
+	width: 130px;
+	height: 130px;
+	margin-bottom: 10px;
+}
+.footer{
+	margin-top: 10px;
+}
+.positionInfo{
+	color: #999999;
+	font-size: 200%;
+}
+td{
+	width: 100px;
+	height: 100px;
+	text-align: center;
+	font-size: 400%;
+}
+table{
+	margin: auto;
+}
+.backgroundLogo{
+	background-image: url(assets/SCS_square100.jpg);
+}
+.verticalBorders{
+	border-left: 2px solid white;
+	border-right: 2px solid white;
+}
+.horizontalBorders{
+	border-top: 2px solid white;
+	border-bottom: 2px solid white;
+}

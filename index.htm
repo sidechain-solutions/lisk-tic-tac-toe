@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+	<meta name="author" content="korben3">
+	<title>Tic Tac Toe - Lisk Blockchain Demo</title>
+	<script src="https://js.lisk.io/lisk-client-2.0.0.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js" integrity="sha256-9MzwK2kJKBmsJFdccXoIDDtsbWFh8bjYK/C7UjB1Ay0=" crossorigin="anonymous"></script>
+	<script src="tictactoe.js"></script>
+	<link href="tictactoe.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div class="wrapper">
+	<div class="menu"><button onClick="newGame()">NEW GAME</button> <button onClick="joinGameInput()">JOIN GAME</button></div>
+	<div id="message">Press New Game or Join Game to start playing</div>
+	<div class="board">
+		<table>
+			<tr>
+				<td></td>
+				<td class="positionInfo">A</td>
+				<td class="positionInfo">B</td>
+				<td class="positionInfo">C</td>
+			</tr>
+			<tr>
+				<td class="positionInfo">1</td>
+				<td id="00"></td>
+				<td id="10" class="verticalBorders"></td>
+				<td id="20"></td>
+			</tr>
+			<tr>
+				<td class="positionInfo">2</td>
+				<td id="01" class="horizontalBorders"></td>
+				<td id="11" class="verticalBorders horizontalBorders backgroundLogo"></td>
+				<td id="21" class="horizontalBorders"></td>
+			</tr>
+			<tr>
+				<td class="positionInfo">3</td>
+				<td id="02"></td>
+				<td id="12" class="verticalBorders"></td>
+				<td id="22"></td>
+			</tr>
+		</table>
+	</div>
+	<div class="gameInfoWrapper">
+		<div id="gameAddressQR"></div>
+		<div id="gameAddressNetwork" class="gameInfo">Connected to Lisk:</div>
+		<div id="gameAddress" class="gameInfo"></div>
+		<div id="playerXAddress" class="gameInfo"></div>
+		<div id="playerOAddress" class="gameInfo"></div>
+	</div>
+	<div id="instructions">
+		<br><br>Instructions:<br>
+		1) Create a new game and share the game address with a friend or join an existing game.<br>
+		2) Make a move by sending any amount to the game address and use the position info in the Message field.<br>
+		For example: A2 or C3, only empty field positions are allowed. First player is "X".<br>
+		3) Wait for the other player to make a move, the board will automatically update.
+	</div>
+	<div class="footer">
+		<img src="assets/footer_01.jpg" alt="Sidechain Solutions - Lisk">	
+	</div>
+</div>
+</body>
