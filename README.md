@@ -1,4 +1,4 @@
-# lisk-tic-tac-toe
+# Lisk Tic Tac Toe
 Lisk Tic Tac Toe is a small game demo build in JavaScript with Lisk Elements.
 
 It demonstrates several features including:
