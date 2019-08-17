@@ -3,6 +3,7 @@
 
 //set a few global variables and setup connection to the lisk network
 const {Mnemonic}=lisk.passphrase; // used for generating BIP39-compliant mnemonic passphrases
+const passphrase = Mnemonic.generateMnemonic(); // generate a passphrase
 var network='test'; // use 'test' for Lisk testnet or 'main' for mainnet
 var gameAddress=''; // game address used to retrieve the game moves
 var timer=0;
@@ -14,7 +15,6 @@ function newGame(){
 	}
 
 	clearInterval(timer);
-	const passphrase = Mnemonic.generateMnemonic(); // generate a passphrase
 	gameAddress=lisk.cryptography.getAddressFromPassphrase(passphrase) // get address from generated passphrase
 	$("#message").html('Please share the following game address: '+gameAddress);
 	showGameAddress(gameAddress);
@@ -114,8 +114,27 @@ function getDelegateName(id, senderId){
 	}).catch(console.error);
 }
 
+function refundWinner(winnerAddress) {
+   networkClient.accounts.get({ address: gameAddress })
+      .then(res => {
+         const balance = parseInt(res.data[0].balance, 10)
+         const fixed = Math.pow(10, 8)
+         const fee = 0.1 * fixed
+         const amount = (balance - fee).toString() // Subtract transaction fee from game address's balance
+         // Create and brodcast transaction
+         const transaction = lisk.transaction.transfer({
+            amount: amount,
+            recipientId: winnerAddress,
+            passphrase: passphrase // game address's passphrase
+          });
+          networkClient.transactions.broadcast(transaction)
+            .then(console.info)
+            .catch(console.error);
+      })
+      .catch(console.error);
+}
+
 function checkGameAddress(){
-	
 	console.log('checking games address..');
 	var data='';
 	var lastSender='';
@@ -124,7 +143,6 @@ function checkGameAddress(){
 	var playfield=[['','',''],['','',''],['','','']]; // create a multidimensional array
 	var positionsFilled=0;
 	
-
 	networkClient.transactions.get({recipientId:gameAddress, limit:100, offset:0, sort:'timestamp:asc'})
 	.then(res => {
 		
@@ -182,11 +200,13 @@ function checkGameAddress(){
 			clearInterval(timer);			
 		}
 		if(checkWinner('X',playfield)){
-			$("#message").html('Congratulations, player X won the game!');
+         $("#message").html('Congratulations, player X won the game!');
+         refundWinner(playerXAddress)
 			clearInterval(timer);
 		}
 		if(checkWinner('O',playfield)){
-			$("#message").html('Congratulations, player O won the game!');
+         $("#message").html('Congratulations, player O won the game!');
+         refundWinner(playerOAddress)
 			clearInterval(timer);
 		}
 	})
