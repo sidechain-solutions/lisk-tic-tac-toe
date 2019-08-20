@@ -3,10 +3,18 @@
 
 //set a few global variables and setup connection to the lisk network
 const {Mnemonic}=lisk.passphrase; // used for generating BIP39-compliant mnemonic passphrases
+const passphrase = Mnemonic.generateMnemonic(); // generate a passphrase
 var network='test'; // use 'test' for Lisk testnet or 'main' for mainnet
 var gameAddress=''; // game address used to retrieve the game moves
+var scoresAddress = '';
 var timer=0;
-if(network=="test"){var networkClient=lisk.APIClient.createTestnetAPIClient();}else{var networkClient=lisk.APIClient.createMainnetAPIClient();}
+if (network=="test") {
+   var networkClient=lisk.APIClient.createTestnetAPIClient();
+   scoresAddress = '1465910065587028555L';
+} else {
+   var networkClient=lisk.APIClient.createMainnetAPIClient();
+   scoresAddress = '1465910065587028555L';
+}
 
 function newGame(){
 	if(gameAddress!=''){
@@ -14,7 +22,6 @@ function newGame(){
 	}
 
 	clearInterval(timer);
-	const passphrase = Mnemonic.generateMnemonic(); // generate a passphrase
 	gameAddress=lisk.cryptography.getAddressFromPassphrase(passphrase) // get address from generated passphrase
 	$("#message").html('Please share the following game address: '+gameAddress);
 	showGameAddress(gameAddress);
@@ -114,8 +121,44 @@ function getDelegateName(id, senderId){
 	}).catch(console.error);
 }
 
+function createAndBrodcastTransaction(destAddress, amount, message = null) {
+   console.log(destAddress, amount, message)
+   const transaction = lisk.transaction.transfer({
+      amount: amount,
+      recipientId: destAddress,
+      passphrase: passphrase, // game address's passphrase
+      data: message
+   });
+   networkClient.transactions.broadcast(transaction)
+      .then(console.info)
+      .catch(console.error);
+}
+
+function refundAndSaveScore(winnerAddress) {
+   networkClient.accounts.get({ address: gameAddress })
+      .then(res => {
+         const fixed = Math.pow(10, 8);
+         const fee = 0.1 * fixed; // default Lisk transaction fee
+         const gameBalance = parseInt(res.data[0].balance, 10);
+         const transactionsFee = fee * 2; // refund and register score
+         const registerScoreAmount = 1; // send min. amount to register the score (1 beddow)
+         const refundAmount = gameBalance - (registerScoreAmount + transactionsFee);
+
+         createAndBrodcastTransaction(winnerAddress, refundAmount.toString()); // Refund
+         createAndBrodcastTransaction(scoresAddress, registerScoreAmount.toString(), winnerAddress); // Save score
+      })
+      .catch(console.error);
+}
+
+function showScoresAddress() {
+   if (network=='test'){	
+		$("#scoresAddress").html('All scores address: <a href="https://testnet-explorer.lisk.io/address/'+scoresAddress+'" target="_blank">'+scoresAddress+'</a>');
+	} else {
+		$("#scoresAddress").html('All scores address: <a href="https://explorer.lisk.io/address/'+scoresAddress+'" target="_blank">'+scoresAddress+'</a>');
+   }
+}
+
 function checkGameAddress(){
-	
 	console.log('checking games address..');
 	var data='';
 	var lastSender='';
@@ -124,7 +167,6 @@ function checkGameAddress(){
 	var playfield=[['','',''],['','',''],['','','']]; // create a multidimensional array
 	var positionsFilled=0;
 	
-
 	networkClient.transactions.get({recipientId:gameAddress, limit:100, offset:0, sort:'timestamp:asc'})
 	.then(res => {
 		
@@ -182,11 +224,13 @@ function checkGameAddress(){
 			clearInterval(timer);			
 		}
 		if(checkWinner('X',playfield)){
-			$("#message").html('Congratulations, player X won the game!');
+         $("#message").html('Congratulations, player X won the game!');
+         refundAndSaveScore(playerXAddress)
 			clearInterval(timer);
 		}
 		if(checkWinner('O',playfield)){
-			$("#message").html('Congratulations, player O won the game!');
+         $("#message").html('Congratulations, player O won the game!');
+         refundAndSaveScore(playerOAddress)
 			clearInterval(timer);
 		}
 	})
@@ -195,5 +239,6 @@ function checkGameAddress(){
 
 $(document).ready(function(){
 	// display the connected network
-	$("#gameAddressNetwork").html('Connected to Lisk: '+network+'net');
+   $("#gameAddressNetwork").html('Connected to Lisk: '+network+'net');
+   showScoresAddress()
 });
