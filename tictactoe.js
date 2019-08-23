@@ -7,6 +7,7 @@ const passphrase = Mnemonic.generateMnemonic(); // generate a passphrase
 var network='test'; // use 'test' for Lisk testnet or 'main' for mainnet
 var gameAddress=''; // game address used to retrieve the game moves
 var scoresAddress = '';
+const registerScoreAmount = 1; // Required amount to register a score in beddows (1 beddow)
 var timer=0;
 if (network=="test") {
    var networkClient=lisk.APIClient.createTestnetAPIClient();
@@ -121,11 +122,24 @@ function getDelegateName(id, senderId){
 	}).catch(console.error);
 }
 
-function createAndBrodcastTransaction(destAddress, amount, message = null) {
-   console.log(destAddress, amount, message)
+/**
+ * @returns {int} Lisk default transaction fee in beddows
+ */
+function getDefaultLiskTransactionFee() {
+   const fixed = Math.pow(10, 8);
+   return 0.1 * fixed; // 0.1 LSK in beddows
+}
+
+/**
+ * @param {string} recipient - The address of the recipient
+ * @param {string} amount - Amount in beddows
+ * @param {string | null} - Optional message to include in the transaction asset
+ */
+function createAndBrodcastTransaction(recipient, amount, message = null) {
+   console.log(recipient, amount, message)
    const transaction = lisk.transaction.transfer({
       amount: amount,
-      recipientId: destAddress,
+      recipientId: recipient,
       passphrase: passphrase, // game address's passphrase
       data: message
    });
@@ -134,18 +148,43 @@ function createAndBrodcastTransaction(destAddress, amount, message = null) {
       .catch(console.error);
 }
 
-function refundAndSaveScore(winnerAddress) {
+/**
+ * Note: In case of tie, register score transaction data field will be empty
+ * @param {string} xAddress - Player X's account 
+ * @param {string} oAddress - Player O's account 
+ */
+function refundPlayersAndRegisterScore(xAddress, oAddress) {
    networkClient.accounts.get({ address: gameAddress })
       .then(res => {
-         const fixed = Math.pow(10, 8);
-         const fee = 0.1 * fixed; // default Lisk transaction fee
+         const gameBalance = parseInt(res.data[0].balance);
+         const defaultTransactionFee = getDefaultLiskTransactionFee();
+         const fees = defaultTransactionFee * 3; // refund both players and register score
+         const availableRefund = gameBalance - (registerScoreAmount + fees);
+         // Since beddow is non-divisible unit, after splitting the available refund between players 
+         // the remaining is added to the score registration transaction.
+         const refundAmount = Math.floor(availableRefund / 2)
+         const regScoreAmount = gameBalance - refundAmount * 2 - fees;
+
+         createAndBrodcastTransaction(xAddress, refundAmount.toString()); // refund player X
+         createAndBrodcastTransaction(oAddress, refundAmount.toString()); // refund player O
+         createAndBrodcastTransaction(scoresAddress, regScoreAmount.toString()); // register score
+      })
+      .catch(console.error);
+}
+
+/**
+ * Note: Register score transaction data field will contain winner address
+ * @param {string} winnerAddress 
+ */
+function refundWinnerAndRegisterScore(winnerAddress) {
+   networkClient.accounts.get({ address: gameAddress })
+      .then(res => {
          const gameBalance = parseInt(res.data[0].balance, 10);
-         const transactionsFee = fee * 2; // refund and register score
-         const registerScoreAmount = 1; // send min. amount to register the score (1 beddow)
+         const transactionsFee = getDefaultLiskTransactionFee() * 2; // refund and register score
          const refundAmount = gameBalance - (registerScoreAmount + transactionsFee);
 
-         createAndBrodcastTransaction(winnerAddress, refundAmount.toString()); // Refund
-         createAndBrodcastTransaction(scoresAddress, registerScoreAmount.toString(), winnerAddress); // Save score
+         createAndBrodcastTransaction(winnerAddress, refundAmount.toString()); // refund
+         createAndBrodcastTransaction(scoresAddress, registerScoreAmount.toString(), winnerAddress); // register score
       })
       .catch(console.error);
 }
@@ -220,17 +259,18 @@ function checkGameAddress(){
 		
 		// check if there's a tie or winner
 		if(positionsFilled===9){
-			$("#message").html('It is a tie!');
+         $("#message").html('It is a tie!');
+         refundPlayersAndRegisterScore(playerXAddress, playerOAddress)
 			clearInterval(timer);			
 		}
 		if(checkWinner('X',playfield)){
          $("#message").html('Congratulations, player X won the game!');
-         refundAndSaveScore(playerXAddress)
+         refundWinnerAndRegisterScore(playerXAddress)
 			clearInterval(timer);
 		}
 		if(checkWinner('O',playfield)){
          $("#message").html('Congratulations, player O won the game!');
-         refundAndSaveScore(playerOAddress)
+         refundWinnerAndRegisterScore(playerOAddress)
 			clearInterval(timer);
 		}
 	})
