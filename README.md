@@ -9,4 +9,4 @@ It demonstrates several features including:
 - Perform actions based on information in the Lisk message / data field
 - Creating a QR code which can be scanned by Lisk Mobile
 
-Check out a live demo at: https://sidechainsolutions.io/demos/lisk-tic-tac-toe/
+Check out a live demo at: https://sidechainsolutions.io/content/demos/lisk-tic-tac-toe/
